@@ -152,7 +152,7 @@ class CVACalculator:
 class PricingParameters:
     def __init__(self, valuation_date, simulation_count: int, 
                  self_reference_entity: str, self_recovery_rate_percent: float, 
-                 report_ccy: str, extended_params=None):
+                 report_ccy: str, numeraire_type = "TerminalZeroCoupon", extended_params=None):
         if isinstance(valuation_date, str):
             self.valuation_date = datetime.fromisoformat(valuation_date)
         elif isinstance(valuation_date, datetime):
@@ -164,6 +164,7 @@ class PricingParameters:
         self.self_reference_entity = self_reference_entity
         self.self_recovery_rate_percent = self_recovery_rate_percent
         self.report_ccy = report_ccy
+        self.numeraire_type = numeraire_type
         self.extended_params = extended_params if extended_params is not None else {}
 
     def to_dict(self):
@@ -173,5 +174,6 @@ class PricingParameters:
             "selfReferenceEntity": self.self_reference_entity,
             "selfRecoveryRatePercent": self.self_recovery_rate_percent,
             "reportCcy": self.report_ccy,
+            "numeraireType": self.numeraire_type,
             **self.extended_params
         }
