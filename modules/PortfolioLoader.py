@@ -29,22 +29,19 @@ class PortfolioLoader:
         self.portfolio_code = portfolio_code
         return self
 
-    def load_transactions(self):
+    def load_transactions(self, effective_date = None):
         transactions_endpoint = f"user-data/portfolios/v1/transactionportfolios/{self.scope}/{self.portfolio_code}/transactions"
+        if effective_date is not None:
+            transactions_endpoint += f"?toTransactionDate={effective_date}"
         transactions_response = EndpointRequest.make_request(transactions_endpoint).data.raw
-
         self.transactions = {trans['instrumentUid']: trans['counterpartyId'] for trans in transactions_response['values'] if trans['type']=='StockIn'}
         return pd.DataFrame(list(self.transactions.items()), columns=['Instrument ID', 'Counterparty'])
 
-    def load_instruments(self, effective_date=None):
-        if effective_date is None:
-            effective_date = datetime.today().strftime('%Y-%m-%d')
+    def load_instruments(self):
         lusid_instruments = self._load_instrument_definitions()
         translated_instruments = self._translate_instruments(lusid_instruments)
         self.counterparties = self._get_counterparty_data(list(self.transactions.values()))
         self.universe = self._build_universe(translated_instruments)
-        self.universe = [instrument for instrument in self.universe if "endDate" not in instrument["instrumentDefinition"] or instrument["instrumentDefinition"]["endDate"] > effective_date]
-
         return self.universe
     
     def set_counterparties(self, counterparties):
