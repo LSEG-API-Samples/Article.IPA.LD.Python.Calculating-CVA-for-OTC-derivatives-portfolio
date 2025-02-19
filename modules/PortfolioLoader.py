@@ -4,7 +4,6 @@ import pandas as pd
 from modules.ResponseHandler import EndpointRequest
 from collections import defaultdict
 from lseg.data.content import symbol_conversion
-from datetime import datetime
 
 class PortfolioLoader:
     def __init__(self):
@@ -78,14 +77,22 @@ class PortfolioLoader:
             self.load_transactions()
 
     def _translate_instruments(self, instrument_definitions):
-        instrument_definitions_translate_endpoint = "partners/lusid/v1/translation/instrumentDefinitions"
+        instrument_definitions_translate_endpoint = "partners/lusid/v1/scriptedtranslation/translateentities"
         instruments = {
-            "instruments": instrument_definitions,
-            "dialect": "RefinitivQps"
+            "entityPayloads": {
+                f"{lusid_instr_id}": {
+                    "entity": json.dumps(instrument_def)
+                } for lusid_instr_id, instrument_def in instrument_definitions.items()
+            },
+              "scriptId": {
+                "scope": "LSEG",
+                "code": "MARVAL-LUSID-TO-QPS",
+                "version": "1.1.0"
+            }
         }
         instrument_definitions_response = EndpointRequest.make_request(instrument_definitions_translate_endpoint, method="POST", body_params=instruments).data.raw
         return {
-            lusid_instrument_id: json.loads(instrument_definition['content'])
+            lusid_instrument_id: json.loads(instrument_definition['entity'])
             for lusid_instrument_id, instrument_definition in instrument_definitions_response['values'].items()
         }
 
